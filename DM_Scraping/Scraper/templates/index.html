@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche</title>
+</head>
+<body>
+
+    <h1>Recherche de produits</h1>
+
+    <form method="GET" action="{% url 'index' %}">
+        <input 
+            type="text" 
+            name="query" 
+            placeholder="Rechercher..."
+            value="{{ query }}"
+        >
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    {% if products %}
+        <h2>Résultats :</h2>
+
+        {% for product in products %}
+            <div>
+                <h3>{{ product.title }}</h3>
+
+                <p>{{ product.price }}</p>
+
+                {% if product.img_link %}
+                    <img src="{{ product.img_link }}" width="150">
+                {% endif %}
+
+                {% if product.link %}
+                    <br>
+                    <a href="{{ product.link }}" target="_blank">
+                        Voir le produit
+                    </a>
+                {% endif %}
+            </div>
+
+            <hr>
+        {% endfor %}
+    {% endif %}
+
+</body>
+</html>
