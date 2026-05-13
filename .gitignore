@@ -1,2 +1,6 @@
-/env
-/important
+/env        # C'est mon environnement virtuel sur ma machine.
+/important  # C'est un dossier local sur ma machine.
+
+# Si vous créez votre propre environnement virtuel ou des dossiers locaux,
+# n'oubliez pas de les ajouter ici pour éviter de les pousser sur GitHub aussi.
+# Merci ;)
