@@ -8,7 +8,7 @@ import re
 def clean_price_jumia(price_text):
     """
     Exemple:
-    '4,299.00 Dhs' -> prix = 4299.0, devise = 'MAD'
+    '6,475.00 Dhs' -> prix = 6475.0, devise = 'MAD'
     """
 
     if not price_text:
@@ -31,6 +31,39 @@ def clean_price_jumia(price_text):
     return prix, devise
 
 
+def clean_note_jumia(note_text):
+    """
+    Exemple:
+    '5 out of 5' -> 5.0
+    """
+
+    if not note_text:
+        return None
+
+    try:
+        note = note_text.split("out")[0].strip()
+        return float(note)
+    except:
+        return None
+
+
+def clean_nombre_avis_jumia(reviews_text):
+    """
+    Exemple:
+    '(3)' -> 3
+    """
+
+    if not reviews_text:
+        return None
+
+    avis = re.sub(r"[^0-9]", "", reviews_text)
+
+    try:
+        return int(avis)
+    except:
+        return None
+
+
 def detect_etat_jumia(titre_complet):
     """
     Détection simple de l'état du produit depuis le titre.
@@ -41,7 +74,11 @@ def detect_etat_jumia(titre_complet):
 
     titre_lower = titre_complet.lower()
 
-    if "remis à neuf" in titre_lower or "reconditionné" in titre_lower or "occasion" in titre_lower:
+    if (
+        "remis à neuf" in titre_lower
+        or "reconditionné" in titre_lower
+        or "occasion" in titre_lower
+    ):
         return "occasion"
 
     return "neuf"
@@ -51,8 +88,11 @@ def jumia(query):
     url = f"https://www.jumia.ma/catalog/?q={query.replace(' ', '+')}"
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        )
     }
 
     response = requests.get(url, headers=headers)
@@ -81,7 +121,6 @@ def jumia(query):
 
         try:
             img_tag = product.find("img", class_="img")
-
             product_img_link = img_tag.get("data-src") or img_tag.get("src")
         except:
             product_img_link = None
@@ -98,8 +137,23 @@ def jumia(query):
 
         prix, devise = clean_price_jumia(price_text)
 
-        note_vendeur = None
-        nombre_avis = None
+        try:
+            stars_tag = product.find("div", class_="stars")
+            note_text = stars_tag.get_text(strip=True)
+            note_vendeur = clean_note_jumia(note_text)
+        except:
+            note_vendeur = None
+
+        try:
+            rev_tag = product.find("div", class_="rev")
+
+            if rev_tag:
+                rev_text = rev_tag.get_text(" ", strip=True)
+                nombre_avis = clean_nombre_avis_jumia(rev_text.split("out of 5")[-1])
+            else:
+                nombre_avis = None
+        except:
+            nombre_avis = None
 
         etat = detect_etat_jumia(titre_complet)
 
@@ -123,12 +177,3 @@ def jumia(query):
             })
 
     return products_data
-
-
-# Test
-if __name__ == "__main__":
-    data = jumia("iphone 13")
-
-    for product in data:
-        print(product)
-        print("-" * 80)
