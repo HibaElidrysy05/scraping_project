@@ -9,12 +9,17 @@
     <h1>Recherche de produits</h1>
 
     <form method="GET" action="{% url 'index' %}">
-        <input 
-            type="text" 
-            name="query" 
+        <input
+            type="text"
+            name="query"
             placeholder="Rechercher..."
             value="{{ query }}"
         >
+
+        <select name="source">
+            <option value="jumia" {% if source == "jumia" %}selected{% endif %}>Jumia</option>
+            <option value="aliexpress" {% if source == "aliexpress" %}selected{% endif %}>AliExpress</option>
+        </select>
 
         <button type="submit">Submit</button>
     </form>
@@ -28,7 +33,9 @@
             <div>
                 <h3>{{ product.title }}</h3>
 
-                <p>{{ product.price }}</p>
+                {% if product.price %}
+                    <p style="color:#e44d26; font-weight:bold;">{{ product.price }}</p>
+                {% endif %}
 
                 {% if product.img_link %}
                     <img src="{{ product.img_link }}" width="150">
@@ -36,14 +43,12 @@
 
                 {% if product.link %}
                     <br>
-                    <a href="{{ product.link }}" target="_blank">
-                        Voir le produit
-                    </a>
+                    <a href="{{ product.link }}" target="_blank">Voir le produit</a>
                 {% endif %}
             </div>
-
             <hr>
         {% endfor %}
+
     {% endif %}
 
 </body>
