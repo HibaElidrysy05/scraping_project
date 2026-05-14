@@ -78,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Scraper',
         'USER': 'root',
-        'PASSWORD': 'YOUR_PASSWORD',
+        'PASSWORD': 'Fati@2004*',
         'HOST': 'localhost',
         'PORT': '3306',
     }
