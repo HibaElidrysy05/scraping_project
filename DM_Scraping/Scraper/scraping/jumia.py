@@ -47,6 +47,7 @@ def jumia(query):
             product_price = None
 
         products_data.append({
+            "source": "Jumia",
             "link" : product_link,
             "img_link" : product_img_link,
             "title" : product_title,

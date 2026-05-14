@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .scraping.jumia import jumia
+from .scraping.avito import avito
 from .models import Product
 
 def index(request):
@@ -10,7 +11,10 @@ def index(request):
         query = request.GET.get("query")
 
         if query:
-            products = jumia(query)
+            jumia_products = jumia(query)
+            avito_products = avito(query)
+
+            products = jumia_products + avito_products
 
             for product in products:
                 Product.objects.create(
@@ -18,12 +22,11 @@ def index(request):
                     price=product.get("price"),
                     img_link=product.get("img_link"),
                     link=product.get("link"),
-                    search_query=query,
-                    source="Jumia"
+                    query=query,
+                    source=product.get("source")
                 )
 
     return render(request, "index.html", {
         "products": products,
         "query": query
     })
-    
