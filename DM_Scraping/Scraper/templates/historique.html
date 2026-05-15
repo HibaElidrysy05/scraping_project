@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique & Base de données</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .topbar h1 { font-size: 22px; color: #222; }
+        .back-btn { padding: 8px 18px; background: #007bff; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; }
+        .back-btn:hover { background: #0056b3; }
+
+        .history-section { background: white; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .history-section h2 { font-size: 15px; color: #555; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .history-card { background: #f8f9fa; border-radius: 8px; padding: 12px 14px; border: 2px solid transparent; transition: all 0.2s; }
+        .history-card:hover { border-color: #007bff; background: #e8f4fd; }
+        .history-card a { text-decoration: none; color: inherit; display: block; }
+        .history-card .hc-query { font-size: 15px; font-weight: 700; color: #222; margin-bottom: 6px; }
+        .history-card .hc-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+        .history-card .hc-date { font-size: 11px; color: #aaa; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; color: white; }
+        .badge-jumia { background: #f90; }
+        .badge-aliexpress { background: #e44; }
+        .badge-banggood { background: #c00; }
+
+        .search-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 22px; }
+        .search-box h2 { font-size: 15px; color: #555; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .search-row input { flex: 1; padding: 10px 14px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+        .search-row input:focus { border-color: #28a745; }
+        .search-row button { padding: 10px 28px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; }
+        .search-row button:hover { background: #1e7e34; }
+        .checkboxes { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .checkboxes label { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .checkboxes input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #28a745; }
+        .cb-jumia { color: #e67e00; }
+        .cb-aliexpress { color: #cc2200; }
+        .cb-banggood { color: #990000; }
+
+        .results-info { font-size: 13px; color: #888; margin-bottom: 10px; }
+        .section-title { font-size: 15px; font-weight: bold; margin: 22px 0 10px; padding: 9px 14px; border-radius: 7px; color: white; }
+        .section-jumia { background: linear-gradient(90deg, #f90, #e67e00); }
+        .section-aliexpress { background: linear-gradient(90deg, #e44, #b22); }
+        .section-banggood { background: linear-gradient(90deg, #c00, #900); }
+
+        .product-card { display: flex; gap: 15px; background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+        .product-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .img-box { width: 115px; height: 115px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 8px; overflow: hidden; }
+        .img-box img { width: 100%; height: 100%; object-fit: contain; }
+        .no-img { font-size: 11px; color: #ccc; text-align: center; }
+        .product-info { flex: 1; }
+        .product-info h3 { font-size: 14px; color: #1a1a1a; margin-bottom: 6px; line-height: 1.45; }
+        .prix { font-size: 20px; font-weight: bold; color: #c0392b; margin: 5px 0 8px; }
+        .meta { font-size: 13px; color: #666; margin: 3px 0; }
+        .meta-small { font-size: 11px; color: #bbb; margin-top: 6px; }
+        .voir-btn { display: inline-block; margin-top: 10px; padding: 7px 16px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; }
+        .voir-btn:hover { background: #1e7e34; }
+        .no-results { color: #888; font-style: italic; padding: 15px 0; }
+        .empty-history { color: #bbb; font-style: italic; font-size: 14px; padding: 10px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="topbar">
+        <h1>📋 Historique & Base de données</h1>
+        <a href="{% url 'index' %}" class="back-btn">🌐 Nouveau scraping</a>
+    </div>
+
+    <!-- Historique des recherches -->
+    <div class="history-section">
+        <h2>🕘 Recherches récentes</h2>
+        {% if history %}
+        <div class="history-grid">
+            {% for h in history %}
+            <div class="history-card">
+                <a href="?query={{ h.search_query }}&sources=jumia&sources=aliexpress&sources=banggood">
+                    <div class="hc-query">🔍 {{ h.search_query }}</div>
+                    <div class="hc-badges">
+                        {% for plat in h.plateformes %}
+                            {% if plat == "Jumia.ma" %}<span class="badge badge-jumia">Jumia</span>
+                            {% elif plat == "AliExpress" %}<span class="badge badge-aliexpress">AliExpress</span>
+                            {% elif plat == "Banggood" %}<span class="badge badge-banggood">Banggood</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="hc-date">{{ h.created_at|date:"d/m/Y à H:i" }}</div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-history">Aucune recherche effectuée pour le moment.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recherche dans la base de données -->
+    <div class="search-box">
+        <h2>🗄️ Rechercher dans la base de données</h2>
+        <form method="GET" action="{% url 'historique' %}">
+            <div class="search-row">
+                <input type="text" name="query" placeholder="Rechercher un produit sauvegardé..." value="{{ query }}" autofocus>
+                <button type="submit">Rechercher</button>
+            </div>
+            <div class="checkboxes">
+                <label class="cb-jumia">
+                    <input type="checkbox" name="sources" value="jumia" {% if "jumia" in sources %}checked{% endif %}>
+                    🟠 Jumia.ma
+                </label>
+                <label class="cb-aliexpress">
+                    <input type="checkbox" name="sources" value="aliexpress" {% if "aliexpress" in sources %}checked{% endif %}>
+                    🔴 AliExpress
+                </label>
+                <label class="cb-banggood">
+                    <input type="checkbox" name="sources" value="banggood" {% if "banggood" in sources %}checked{% endif %}>
+                    🔴 Banggood
+                </label>
+            </div>
+        </form>
+    </div>
+
+    {% if query and not products %}
+        <p class="no-results">Aucun résultat trouvé pour <strong>{{ query }}</strong> dans la base de données.</p>
+    {% endif %}
+
+    {% if products %}
+        <p class="results-info">🗄️ {{ products|length }} produit(s) trouvé(s) pour <strong>{{ query }}</strong></p>
+
+        {% if "jumia" in sources %}
+        <div class="section-title section-jumia">🟠 Jumia.ma</div>
+        {% for product in products %}{% if product.plateforme == "Jumia.ma" %}
+        <div class="product-card">
+            <div class="img-box">
+                {% if product.img_link %}<img src="{{ product.img_link }}" alt="">
+                {% else %}<div class="no-img">Pas d'image</div>{% endif %}
+            </div>
+            <div class="product-info">
+                <h3>{{ product.titre_complet }}</h3>
+                {% if product.prix %}<div class="prix">{{ product.prix }}</div>{% endif %}
+                {% if product.note_vendeur %}<p class="meta">⭐ {{ product.note_vendeur }}/5{% if product.nombre_avis %} · {{ product.nombre_avis }} avis{% endif %}</p>{% endif %}
+                {% if product.etat %}<p class="meta">État : <strong>{{ product.etat }}</strong>{% if product.type_vendeur %} · {{ product.type_vendeur }}{% endif %}</p>{% endif %}
+                <p class="meta-small">Collecté : {{ product.date_collecte }} · ID : {{ product.id_recherche }}</p>
+                {% if product.link %}<a href="{{ product.link }}" target="_blank" class="voir-btn">Voir le produit →</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}{% endfor %}
+        {% endif %}
+
+        {% if "aliexpress" in sources %}
+        <div class="section-title section-aliexpress" style="margin-top:20px;">🔴 AliExpress</div>
+        {% for product in products %}{% if product.plateforme == "AliExpress" %}
+        <div class="product-card">
+            <div class="img-box">
+                {% if product.img_link %}<img src="{{ product.img_link }}" alt="">
+                {% else %}<div class="no-img">Pas d'image</div>{% endif %}
+            </div>
+            <div class="product-info">
+                <h3>{{ product.titre_complet }}</h3>
+                {% if product.prix %}<div class="prix">{{ product.prix }}</div>{% endif %}
+                <p class="meta-small">Collecté : {{ product.date_collecte }} · ID : {{ product.id_recherche }}</p>
+                {% if product.link %}<a href="{{ product.link }}" target="_blank" class="voir-btn">Voir le produit →</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}{% endfor %}
+        {% endif %}
+
+        {% if "banggood" in sources %}
+        <div class="section-title section-banggood" style="margin-top:20px;">🔴 Banggood</div>
+        {% for product in products %}{% if product.plateforme == "Banggood" %}
+        <div class="product-card">
+            <div class="img-box">
+                {% if product.img_link %}<img src="{{ product.img_link }}" alt="">
+                {% else %}<div class="no-img">Pas d'image</div>{% endif %}
+            </div>
+            <div class="product-info">
+                <h3>{{ product.titre_complet }}</h3>
+                {% if product.prix %}<div class="prix">{{ product.prix }}</div>{% endif %}
+                <p class="meta-small">Collecté : {{ product.date_collecte }} · ID : {{ product.id_recherche }}</p>
+                {% if product.link %}<a href="{{ product.link }}" target="_blank" class="voir-btn">Voir le produit →</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}{% endfor %}
+        {% endif %}
+    {% endif %}
+
+</div>
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const checked = document.querySelectorAll('input[name="sources"]:checked');
+    if (checked.length === 0) {
+        e.preventDefault();
+        alert('Cochez au moins une source !');
+    }
+});
+</script>
+</body>
+</html>

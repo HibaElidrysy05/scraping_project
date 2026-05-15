@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un compte</title>
+</head>
+<body>
+
+    <h1>Créer un compte</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="text" name="username" placeholder="Nom d'utilisateur" required>
+        <br><br>
+
+        <input type="email" name="email" placeholder="Email">
+        <br><br>
+
+        <input type="password" name="password1" placeholder="Mot de passe" required>
+        <br><br>
+
+        <input type="password" name="password2" placeholder="Confirmer le mot de passe" required>
+        <br><br>
+
+        <button type="submit">Créer mon compte</button>
+    </form>
+
+    <p>
+        Vous avez déjà un compte ?
+        <a href="{% url 'login' %}">Se connecter</a>
+    </p>
+
+</body>
+</html>
