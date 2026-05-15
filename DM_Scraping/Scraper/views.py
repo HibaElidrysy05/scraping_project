@@ -1,10 +1,18 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from .scraping.jumia import jumia
 from .scraping.amazon import amazon
 from .scraping.avito import avito
+
 from .models import Product
+from .scraping.nettoyage import (
+    pretraiter_produit,
+    score_pertinence
+)
 
 
 @login_required(login_url="login")
@@ -16,9 +24,9 @@ def index(request):
         query = request.GET.get("query", "")
 
         if query:
-            amazon_products = amazon(query)
-            jumia_products = jumia(query)
-            avito_products = avito(query)
+            amazon_products = amazon(query) or []
+            jumia_products = jumia(query) or []
+            avito_products = avito(query) or []
 
             products = amazon_products + jumia_products + avito_products
 
@@ -45,26 +53,27 @@ def index(request):
         "query": query
     })
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 @api_view(["GET"])
 def search_api(request):
-    query = request.GET.get("query")
+    query = request.GET.get("query", "")
+    platforms = request.GET.get("platforms", "all")
 
     if not query:
         return Response([])
 
-    jumia_products = jumia(query)
-    avito_products = avito(query)
+    selected = platforms.split(",")
 
-    products = jumia_products + avito_products
+    products = []
 
-    products = sorted(
-        products,
-        key=lambda product: score_pertinence(product.get("title"), query),
-        reverse=True
-    )
+    if "all" in selected or "amazon" in selected:
+        products += amazon(query) or []
+
+    if "all" in selected or "jumia" in selected:
+        products += jumia(query) or []
+
+    if "all" in selected or "avito" in selected:
+        products += avito(query) or []
 
     cleaned_products = []
 
