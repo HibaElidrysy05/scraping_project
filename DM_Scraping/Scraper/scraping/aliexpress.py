@@ -38,10 +38,18 @@ def aliexpress(query):
 
     try:
         driver.get(url)
-        WebDriverWait(driver, 15).until(
+        WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
-        time.sleep(4)
+        time.sleep(5)
+
+        # Scroll pour charger les produits
+        for y in [600, 1200, 1800]:
+            driver.execute_script(f"window.scrollTo(0, {y});")
+            time.sleep(1.5)
+
+        current_url = driver.current_url
+        print(f"AliExpress URL: {current_url[:80]}")
 
         soup = BeautifulSoup(driver.page_source, "html.parser")
         product_links = soup.find_all("a", href=lambda h: h and "/item/" in h)
@@ -72,19 +80,37 @@ def aliexpress(query):
             prix = None
             devise = None
             full_text = a_tag.get_text(" ", strip=True)
-            price_matches = re.findall(
-                r'(?:MAD|€|\$)\s*[\d,]+\.?\d*|[\d,]+\.?\d*\s*(?:MAD|€|\$)',
-                full_text
-            )
-            if price_matches:
-                raw = price_matches[0]
+
+            #Supprimer les espaces → gérer prix splitté en spans: "MAD 3 , 264 . 32" → "MAD3,264.32"
+            compact = re.sub(r'\s+', '', full_text)
+
+            #Chercher les prix : devise AVANT le nombre uniquement (format AliExpress),
+            matches = re.findall(r'(?:MAD|US$|$|€)[\d,]+.?\d*', compact)
+
+            # Collecter tous les prix valides → prendre le minimum (prix soldé, pas le barré)
+            all_prices = []
+            for raw in matches:
                 nums = re.findall(r'[\d,]+\.?\d*', raw)
                 if nums:
                     try:
-                        prix = float(nums[0].replace(",", ""))
+                        val = float(nums[0].replace(",", ""))
+                        if val > 100:  # ignorer les ratings (0–5)
+                            if "MAD" in raw:
+                                currency = "MAD"
+                            elif "$" in raw:
+                                currency = "USD"
+                            elif "€" in raw:
+                                currency = "EUR"
+                            else:
+                                currency = "USD"
+                            all_prices.append((val, currency))
                     except ValueError:
                         pass
-                devise = "USD" if "$" in raw else "EUR" if "€" in raw else "MAD"
+
+            if all_prices:
+                # Le prix le plus bas = prix de vente (pas le prix barré)
+                all_prices.sort(key=lambda x: x[0])
+                prix, devise = all_prices[0]
 
             img_el = a_tag.find("img")
             img_link = None
@@ -108,6 +134,7 @@ def aliexpress(query):
                 "date_collecte": date_collecte,
                 "id_recherche": id_recherche,
             })
+
 
     finally:
         driver.quit()
