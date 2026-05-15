@@ -1,9 +1,12 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
 from .scraping.jumia import jumia
 from .scraping.amazon import amazon
 from .models import Product
 
 
+@login_required(login_url="login")
 def index(request):
     products = []
     query = ""
@@ -19,6 +22,7 @@ def index(request):
 
             for product in products:
                 Product.objects.create(
+                    user=request.user,
                     titre_complet=product.get("titre_complet"),
                     prix=product.get("prix"),
                     devise=product.get("devise"),
