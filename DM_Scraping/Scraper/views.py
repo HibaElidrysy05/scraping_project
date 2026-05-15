@@ -1,57 +1,44 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 from .scraping.jumia import jumia
+from .scraping.amazon import amazon
 from .scraping.avito import avito
-
 from .models import Product
 
-from .nettoyage import pretraiter_produit, score_pertinence
 
-
+@login_required(login_url="login")
 def index(request):
-
     products = []
     query = ""
 
     if request.method == "GET":
-
-        query = request.GET.get("query")
+        query = request.GET.get("query", "")
 
         if query:
-
+            amazon_products = amazon(query)
             jumia_products = jumia(query)
             avito_products = avito(query)
 
-            products = jumia_products + avito_products
-
-            products = sorted(
-                products,
-                key=lambda product: score_pertinence(
-                    product.get("title"),
-                    query
-                ),
-                reverse=True
-            )
+            products = amazon_products + jumia_products + avito_products
 
             for product in products:
-
-                produit_nettoye = pretraiter_produit(product)
-
-                if produit_nettoye["title"] and produit_nettoye["link"]:
-
-                    if not Product.objects.filter(
-                        link=produit_nettoye["link"]
-                    ).exists():
-
-                        Product.objects.create(
-                            source=produit_nettoye["source"],
-                            query=query,
-                            title=produit_nettoye["title"],
-                            price=produit_nettoye["price"],
-                            price_value=produit_nettoye["price_value"],
-                            img_link=produit_nettoye["img_link"],
-                            link=produit_nettoye["link"]
-                        )
+                Product.objects.create(
+                    user=request.user,
+                    titre_complet=product.get("titre_complet"),
+                    prix=product.get("prix"),
+                    devise=product.get("devise"),
+                    plateforme=product.get("plateforme"),
+                    note_vendeur=product.get("note_vendeur"),
+                    nombre_avis=product.get("nombre_avis"),
+                    etat=product.get("etat"),
+                    type_vendeur=product.get("type_vendeur"),
+                    img_link=product.get("img_link"),
+                    link=product.get("link"),
+                    search_query=product.get("search_query"),
+                    date_collecte=product.get("date_collecte"),
+                    id_recherche=product.get("id_recherche"),
+                )
 
     return render(request, "index.html", {
         "products": products,

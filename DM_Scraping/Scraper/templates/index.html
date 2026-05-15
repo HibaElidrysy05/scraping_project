@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Recherche</title>
@@ -9,7 +9,6 @@
     <h1>Recherche de produits</h1>
 
     <form method="GET" action="{% url 'index' %}">
-        
         <input 
             type="text" 
             name="query" 
@@ -17,58 +16,99 @@
             value="{{ query }}"
         >
 
-        <button type="submit">
-            Submit
-        </button>
-
+        <button type="submit">Submit</button>
     </form>
 
     <hr>
 
     {% if products %}
-
         <h2>Résultats :</h2>
 
         {% for product in products %}
-
             <div>
-
-                <h3>
-                    {{ product.title }}
-                </h3>
-
-                <p>
-                    Prix : {{ product.price }}
-                </p>
-
-                <p>
-                    Source : {{ product.source }}
-                </p>
+                <h3>{{ product.titre_complet }}</h3>
 
                 {% if product.img_link %}
-                    <img 
-                        src="{{ product.img_link }}" 
-                        width="150"
-                    >
+                    <img src="{{ product.img_link }}" width="150">
                 {% endif %}
 
-                {% if product.link %}
-                    <br>
+                <p>
+                    <strong>Prix :</strong>
+                    {% if product.prix %}
+                        {{ product.prix }} {{ product.devise }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
 
-                    <a 
-                        href="{{ product.link }}" 
-                        target="_blank"
-                    >
+                <p>
+                    <strong>Plateforme :</strong>
+                    {{ product.plateforme }}
+                </p>
+
+                <p>
+                    <strong>Note vendeur / produit :</strong>
+                    {% if product.note_vendeur %}
+                        {{ product.note_vendeur }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Nombre d'avis :</strong>
+                    {% if product.nombre_avis %}
+                        {{ product.nombre_avis }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>État :</strong>
+                    {% if product.etat %}
+                        {{ product.etat }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Type vendeur :</strong>
+                    {% if product.type_vendeur %}
+                        {{ product.type_vendeur }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Date collecte :</strong>
+                    {% if product.date_collecte %}
+                        {{ product.date_collecte }}
+                    {% else %}
+                        Non disponible
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>ID recherche :</strong>
+                    {{ product.id_recherche }}
+                </p>
+
+                {% if product.link %}
+                    <a href="{{ product.link }}" target="_blank">
                         Voir le produit
                     </a>
                 {% endif %}
-
             </div>
 
             <hr>
-
         {% endfor %}
-
+    {% else %}
+        {% if query %}
+            <p>Aucun produit trouvé pour "{{ query }}".</p>
+        {% endif %}
     {% endif %}
 
 </body>
