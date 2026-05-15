@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Recherche de produits</title>
+    <title>Historique des recherches</title>
 
     <style>
         * {
@@ -27,7 +27,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 18px;
-            gap: 10px;
         }
 
         .topbar h1 {
@@ -35,101 +34,17 @@
             color: #222;
         }
 
-        .top-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .history-btn {
+        .back-btn {
             padding: 8px 18px;
-            background: #6c757d;
+            background: #007bff;
             color: white;
-            border: none;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
             text-decoration: none;
-        }
-
-        .history-btn:hover {
-            background: #545b62;
-        }
-
-        .history-panel {
-            display: none;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-        }
-
-        .history-panel h3 {
-            font-size: 13px;
-            color: #999;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 10px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            background: #f8f9fa;
-        }
-
-        .history-item:hover {
-            background: #e9ecef;
-        }
-
-        .history-item a {
-            text-decoration: none;
-            color: #222;
             font-size: 14px;
-            font-weight: 500;
-            flex: 1;
         }
 
-        .history-item .h-meta {
-            font-size: 12px;
-            color: #999;
-            margin-left: 12px;
-            white-space: nowrap;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-            margin-left: 6px;
-        }
-
-        .badge-jumia {
-            background: #f90;
-        }
-
-        .badge-aliexpress {
-            background: #e44;
-        }
-
-        .badge-banggood {
-            background: #c00;
-        }
-
-        .badge-amazon {
-            background: #ff9900;
-        }
-
-        .badge-avito {
-            background: #00a86b;
+        .back-btn:hover {
+            background: #0056b3;
         }
 
         .search-box {
@@ -155,10 +70,6 @@
             outline: none;
         }
 
-        .search-row input:focus {
-            border-color: #007bff;
-        }
-
         .search-row button {
             padding: 10px 28px;
             background: #007bff;
@@ -168,18 +79,6 @@
             cursor: pointer;
             font-size: 15px;
             font-weight: bold;
-        }
-
-        .search-row button:hover {
-            background: #0056b3;
-        }
-
-        .options-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
         }
 
         .checkboxes {
@@ -229,30 +128,74 @@
             color: #008f5a;
         }
 
-        .mode-toggle {
-            display: flex;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid #007bff;
-        }
-
-        .mode-toggle input[type="radio"] {
-            display: none;
-        }
-
-        .mode-toggle label {
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+        .history-list {
             background: white;
-            color: #007bff;
-            transition: all 0.2s;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 22px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
 
-        .mode-toggle input[type="radio"]:checked + label {
-            background: #007bff;
+        .history-list h3 {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+        }
+
+        .history-item:hover {
+            background: #e9ecef;
+        }
+
+        .history-item a {
+            text-decoration: none;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .h-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
             color: white;
+            margin-left: 6px;
+        }
+
+        .badge-jumia {
+            background: #f90;
+        }
+
+        .badge-aliexpress {
+            background: #e44;
+        }
+
+        .badge-banggood {
+            background: #c00;
+        }
+
+        .badge-amazon {
+            background: #ff9900;
+        }
+
+        .badge-avito {
+            background: #00a86b;
         }
 
         .section-title {
@@ -284,10 +227,6 @@
             background: linear-gradient(90deg, #00a86b, #007a4d);
         }
 
-        .section-db {
-            background: linear-gradient(90deg, #6c757d, #495057);
-        }
-
         .product-card {
             display: flex;
             gap: 15px;
@@ -296,10 +235,6 @@
             padding: 15px;
             margin-bottom: 10px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        }
-
-        .product-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
         .img-box {
@@ -367,10 +302,6 @@
             font-size: 13px;
         }
 
-        .voir-btn:hover {
-            background: #1e7e34;
-        }
-
         .no-results {
             color: #888;
             font-style: italic;
@@ -383,42 +314,24 @@
             margin-bottom: 10px;
         }
 
+        .top-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .logout-btn {
             padding: 8px 18px;
             background: #dc3545;
             color: white;
-            border: none;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
             text-decoration: none;
+            font-size: 14px;
         }
 
         .logout-btn:hover {
             background: #b02a37;
         }
-
-        @media (max-width: 700px) {
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .search-row {
-                flex-direction: column;
-            }
-
-            .product-card {
-                flex-direction: column;
-            }
-
-            .img-box {
-                width: 100%;
-                height: 180px;
-            }
-        }
-
-        
     </style>
 </head>
 
@@ -426,15 +339,11 @@
 <div class="container">
 
     <div class="topbar">
-        <h1>🛒 Recherche de produits</h1>
+        <h1>📚 Historique de mes recherches</h1>
 
         <div class="top-actions">
-            {% if history %}
-                <button class="history-btn" onclick="toggleHistory()">📋 Mini historique</button>
-            {% endif %}
-
-            <a href="{% url 'historique' %}" class="history-btn">
-                📚 Page historique
+            <a href="{% url 'index' %}" class="back-btn">
+                ← Retour à la recherche
             </a>
 
             <a href="{% url 'logout' %}" class="logout-btn">
@@ -443,9 +352,55 @@
         </div>
     </div>
 
+    <div class="search-box">
+        <form method="GET" action="{% url 'historique' %}">
+            <div class="search-row">
+                <input type="text" name="query" placeholder="Rechercher dans mon historique..." value="{{ query }}">
+                <button type="submit">Rechercher</button>
+            </div>
+
+            <div class="checkboxes">
+                <label class="cb-all">
+                    <input type="checkbox" name="sources" value="all" id="source_all">
+                    🌍 Tous les sites
+                </label>
+
+                <label class="cb-jumia">
+                    <input type="checkbox" name="sources" value="jumia" class="source-item"
+                           {% if "jumia" in sources %}checked{% endif %}>
+                    🟠 Jumia.ma
+                </label>
+
+                <label class="cb-aliexpress">
+                    <input type="checkbox" name="sources" value="aliexpress" class="source-item"
+                           {% if "aliexpress" in sources %}checked{% endif %}>
+                    🔴 AliExpress
+                </label>
+
+                <label class="cb-banggood">
+                    <input type="checkbox" name="sources" value="banggood" class="source-item"
+                           {% if "banggood" in sources %}checked{% endif %}>
+                    🔴 Banggood
+                </label>
+
+                <label class="cb-amazon">
+                    <input type="checkbox" name="sources" value="amazon" class="source-item"
+                           {% if "amazon" in sources %}checked{% endif %}>
+                    🟡 Amazon
+                </label>
+
+                <label class="cb-avito">
+                    <input type="checkbox" name="sources" value="avito" class="source-item"
+                           {% if "avito" in sources %}checked{% endif %}>
+                    🟢 Avito.ma
+                </label>
+            </div>
+        </form>
+    </div>
+
     {% if history %}
-    <div class="history-panel" id="historyPanel">
-        <h3>Recherches récentes</h3>
+    <div class="history-list">
+        <h3>Mes recherches récentes</h3>
 
         {% for h in history %}
         <div class="history-item">
@@ -473,86 +428,16 @@
     </div>
     {% endif %}
 
-    <div class="search-box">
-        <form method="GET" action="{% url 'index' %}">
-            <div class="search-row">
-                <input type="text" name="query" placeholder="Rechercher un produit..." value="{{ query }}" autofocus>
-                <button type="submit">Rechercher</button>
-            </div>
-
-            <div class="options-row">
-                <div class="checkboxes">
-
-                    <label class="cb-all">
-                        <input type="checkbox" name="sources" value="all" id="source_all">
-                        🌍 Tous les sites
-                    </label>
-
-                    <label class="cb-jumia">
-                        <input type="checkbox" name="sources" value="jumia" class="source-item"
-                               {% if "jumia" in sources %}checked{% endif %}>
-                        🟠 Jumia.ma
-                    </label>
-
-                    <label class="cb-aliexpress">
-                        <input type="checkbox" name="sources" value="aliexpress" class="source-item"
-                               {% if "aliexpress" in sources %}checked{% endif %}>
-                        🔴 AliExpress
-                    </label>
-
-                    <label class="cb-banggood">
-                        <input type="checkbox" name="sources" value="banggood" class="source-item"
-                               {% if "banggood" in sources %}checked{% endif %}>
-                        🔴 Banggood
-                    </label>
-
-                    <label class="cb-amazon">
-                        <input type="checkbox" name="sources" value="amazon" class="source-item"
-                               {% if "amazon" in sources %}checked{% endif %}>
-                        🟡 Amazon
-                    </label>
-
-                    <label class="cb-avito">
-                        <input type="checkbox" name="sources" value="avito" class="source-item"
-                               {% if "avito" in sources %}checked{% endif %}>
-                        🟢 Avito.ma
-                    </label>
-
-                </div>
-
-                <div class="mode-toggle">
-                    <input type="radio" name="mode" id="mode_scraping" value="scraping"
-                           {% if mode == "scraping" %}checked{% endif %}>
-                    <label for="mode_scraping">🌐 Nouveau scraping</label>
-
-                    <input type="radio" name="mode" id="mode_db" value="database"
-                           {% if mode == "database" %}checked{% endif %}>
-                    <label for="mode_db">🗄️ Base de données</label>
-                </div>
-            </div>
-        </form>
-    </div>
-
     {% if query and not products %}
         <p class="no-results">
-            Aucun résultat trouvé pour <strong>{{ query }}</strong>
-            {% if mode == "database" %}
-                dans la base de données.
-            {% endif %}
+            Aucun produit trouvé dans ton historique pour <strong>{{ query }}</strong>.
         </p>
     {% endif %}
 
     {% if products %}
-
-        {% if mode == "database" %}
-            <p class="results-info">
-                🗄️ {{ products|length }} produit(s) trouvé(s) dans la base de données pour <strong>{{ query }}</strong>
-            </p>
-        {% else %}
-            <p class="results-info">
-                🌐 {{ products|length }} produit(s) collecté(s) par scraping pour <strong>{{ query }}</strong>
-            </p>
-        {% endif %}
+        <p class="results-info">
+            🗄️ {{ products|length }} produit(s) trouvé(s) dans ton historique pour <strong>{{ query }}</strong>
+        </p>
 
         {% if "jumia" in sources %}
         <div class="section-title section-jumia">🟠 Jumia.ma</div>
@@ -604,14 +489,6 @@
 </div>
 
 <script>
-function toggleHistory() {
-    const p = document.getElementById('historyPanel');
-
-    if (p) {
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
-}
-
 const allCheckbox = document.getElementById('source_all');
 const sourceItems = document.querySelectorAll('.source-item');
 

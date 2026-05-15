@@ -3,33 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <title>Connexion</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-header h1 {
+            font-size: 26px;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .auth-header p {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .message-box {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            outline: none;
+            background: #fff;
+        }
+
+        .form-group input:focus {
+            border-color: #007bff;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .auth-btn:hover {
+            background: #0056b3;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .auth-footer a {
+            color: #007bff;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            background: #e9f2ff;
+            color: #007bff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
+
 <body>
 
-    <h1>Connexion</h1>
+<div class="auth-container">
+    <div class="auth-card">
 
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
+        <div class="auth-header">
+            <span class="brand-badge">🛒 Scraping Project</span>
+            <h1>Connexion</h1>
+            <p>Connectez-vous pour accéder à votre espace de recherche.</p>
+        </div>
 
-    <form method="POST">
-        {% csrf_token %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message-box">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-        <input type="text" name="username" placeholder="Nom d'utilisateur" required>
-        <br><br>
+        <form method="POST">
+            {% csrf_token %}
 
-        <input type="password" name="password" placeholder="Mot de passe" required>
-        <br><br>
+            <div class="form-group">
+                <label>Nom d'utilisateur</label>
+                <input type="text" name="username" placeholder="Entrer votre nom d'utilisateur" required>
+            </div>
 
-        <button type="submit">Se connecter</button>
-    </form>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" name="password" placeholder="Entrer votre mot de passe" required>
+            </div>
 
-    <p>
-        Vous n'avez pas de compte ?
-        <a href="{% url 'register' %}">Créer un compte</a>
-    </p>
+            <button type="submit" class="auth-btn">
+                Se connecter
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Vous n'avez pas de compte ?
+            <a href="{% url 'register' %}">Créer un compte</a>
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

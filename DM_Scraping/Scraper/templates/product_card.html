@@ -1,0 +1,45 @@
+<div class="product-card">
+    <div class="img-box">
+        {% if product.img_link %}
+            <img src="{{ product.img_link }}" alt="">
+        {% else %}
+            <div class="no-img">Pas d'image</div>
+        {% endif %}
+    </div>
+
+    <div class="product-info">
+        <h3>{{ product.titre_complet }}</h3>
+
+        {% if product.prix %}
+            <div class="prix">{{ product.prix }}</div>
+        {% endif %}
+
+        {% if product.note_vendeur %}
+            <p class="meta">
+                ⭐ {{ product.note_vendeur }}/5
+                {% if product.nombre_avis %}
+                    · {{ product.nombre_avis }} avis
+                {% endif %}
+            </p>
+        {% endif %}
+
+        {% if product.etat %}
+            <p class="meta">
+                État : <strong>{{ product.etat }}</strong>
+                {% if product.type_vendeur %}
+                    · {{ product.type_vendeur }}
+                {% endif %}
+            </p>
+        {% endif %}
+
+        <p class="meta-small">
+            Collecté : {{ product.date_collecte }} · ID : {{ product.id_recherche }}
+        </p>
+
+        {% if product.link %}
+            <a href="{{ product.link }}" target="_blank" class="voir-btn">
+                Voir le produit →
+            </a>
+        {% endif %}
+    </div>
+</div>
