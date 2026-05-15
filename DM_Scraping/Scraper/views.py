@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 from .scraping.jumia import jumia
 from .scraping.amazon import amazon
+from .scraping.avito import avito
 from .models import Product
 
 
@@ -17,8 +18,9 @@ def index(request):
         if query:
             amazon_products = amazon(query)
             jumia_products = jumia(query)
+            avito_products = avito(query)
 
-            products = amazon_products + jumia_products
+            products = amazon_products + jumia_products + avito_products
 
             for product in products:
                 Product.objects.create(
