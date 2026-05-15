@@ -7,6 +7,7 @@ def nettoyer_texte(texte):
         return None
 
     texte = texte.strip()
+
     texte = re.sub(r"\s+", " ", texte)
 
     return texte
@@ -71,7 +72,7 @@ def normaliser_prix(prix):
     prix = prix.replace("$", "")
     prix = prix.replace("USD", "")
 
-    prix = prix.replace(",", ".")
+    prix = prix.replace(",", "")
 
     prix = prix.strip()
 

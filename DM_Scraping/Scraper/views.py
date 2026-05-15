@@ -57,3 +57,34 @@ def index(request):
         "products": products,
         "query": query
     })
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(["GET"])
+def search_api(request):
+    query = request.GET.get("query")
+
+    if not query:
+        return Response([])
+
+    jumia_products = jumia(query)
+    avito_products = avito(query)
+
+    products = jumia_products + avito_products
+
+    products = sorted(
+        products,
+        key=lambda product: score_pertinence(product.get("title"), query),
+        reverse=True
+    )
+
+    cleaned_products = []
+
+    for product in products:
+        produit_nettoye = pretraiter_produit(product)
+
+        if produit_nettoye["title"] and produit_nettoye["link"]:
+            cleaned_products.append(produit_nettoye)
+
+    return Response(cleaned_products)
