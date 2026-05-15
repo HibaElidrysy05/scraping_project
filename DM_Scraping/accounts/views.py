@@ -57,3 +57,32 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.contrib.auth.models import User
+
+
+@api_view(["POST"])
+def register_api(request):
+    username = request.data.get("username")
+    email = request.data.get("email")
+    password1 = request.data.get("password1")
+    password2 = request.data.get("password2")
+
+    if not username or not password1 or not password2:
+        return Response({"error": "Tous les champs obligatoires sont requis."}, status=400)
+
+    if password1 != password2:
+        return Response({"error": "Les mots de passe ne correspondent pas."}, status=400)
+
+    if User.objects.filter(username=username).exists():
+        return Response({"error": "Ce nom d'utilisateur existe déjà."}, status=400)
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password1
+    )
+
+    return Response({"message": "Compte créé avec succès."})
