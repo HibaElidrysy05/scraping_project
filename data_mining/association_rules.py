@@ -1,13 +1,15 @@
 """
-Association rule mining on cleaned product data (P2) — FP-Growth + lift.
+Association rule mining on cleaned product data (P2) — FP-Growth + Apriori + lift.
 
 Input: cleaned DataFrame from preprocessing.clean_data.
 """
 
 from __future__ import annotations
 
+from typing import Callable
+
 import pandas as pd
-from mlxtend.frequent_patterns import association_rules, fpgrowth
+from mlxtend.frequent_patterns import apriori, association_rules, fpgrowth
 from mlxtend.preprocessing import TransactionEncoder
 
 SUPPORT_CANDIDATES = [0.05, 0.10, 0.15, 0.20]
@@ -61,12 +63,16 @@ def _encode_transactions(transactions: list[list[str]]) -> pd.DataFrame:
 
 def _choose_support(
     encoded: pd.DataFrame,
+    miner: Callable[..., pd.DataFrame] | None = None,
 ) -> tuple[float, list[dict]]:
+    if miner is None:
+        miner = lambda enc, ms: fpgrowth(enc, min_support=ms, use_colnames=True)
+
     search_results = []
     chosen = FALLBACK_SUPPORT
 
     for min_support in SUPPORT_CANDIDATES:
-        itemsets = fpgrowth(encoded, min_support=min_support, use_colnames=True)
+        itemsets = miner(encoded, min_support)
         count = len(itemsets)
         search_results.append(
             {
@@ -161,31 +167,58 @@ def run_association_rules(df: pd.DataFrame) -> dict:
 
     chosen_support, support_search = _choose_support(encoded)
 
-    itemsets = fpgrowth(encoded, min_support=chosen_support, use_colnames=True)
+    itemsets_fp = fpgrowth(encoded, min_support=chosen_support, use_colnames=True)
+    itemsets_ap = apriori(encoded, min_support=chosen_support, use_colnames=True)
 
-    if itemsets.empty:
+    algorithm_comparison = {
+        "primary_algorithm": "fpgrowth",
+        "fpgrowth_itemsets": int(len(itemsets_fp)),
+        "apriori_itemsets": int(len(itemsets_ap)),
+        "fpgrowth_rules_gamme": 0,
+        "apriori_rules_gamme": 0,
+    }
+
+    if itemsets_fp.empty:
         return {
             "support_search": support_search,
             "chosen_support": round(float(chosen_support), 3),
             "total_rules": 0,
             "top_rules": [],
             "high_confidence_warning": None,
+            "algorithm_comparison": algorithm_comparison,
         }
 
     rules = association_rules(
-        itemsets,
+        itemsets_fp,
         metric="lift",
         min_threshold=LIFT_THRESHOLD,
     )
 
     if rules.empty:
         rules = association_rules(
-            itemsets,
+            itemsets_fp,
             metric="lift",
             min_threshold=LIFT_FALLBACK,
         )
 
     top_rules = _rules_to_top_list(rules) if not rules.empty else []
+    algorithm_comparison["fpgrowth_rules_gamme"] = int(len(top_rules))
+
+    if not itemsets_ap.empty:
+        rules_ap = association_rules(
+            itemsets_ap,
+            metric="lift",
+            min_threshold=LIFT_THRESHOLD,
+        )
+        if rules_ap.empty:
+            rules_ap = association_rules(
+                itemsets_ap,
+                metric="lift",
+                min_threshold=LIFT_FALLBACK,
+            )
+        algorithm_comparison["apriori_rules_gamme"] = int(
+            len(_rules_to_top_list(rules_ap)) if not rules_ap.empty else 0
+        )
 
     has_high_confidence = any(r["overfitting_warning"] for r in top_rules)
     if has_high_confidence:
@@ -203,6 +236,7 @@ def run_association_rules(df: pd.DataFrame) -> dict:
         "total_rules": int(len(top_rules)),
         "top_rules": top_rules,
         "high_confidence_warning": high_confidence_warning,
+        "algorithm_comparison": algorithm_comparison,
     }
 
 

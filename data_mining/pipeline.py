@@ -239,6 +239,7 @@ def run_pipeline(df: pd.DataFrame) -> dict:
             "total_rules": rules_result["total_rules"],
             "top_rules": rules_result["top_rules"],
             "high_confidence_warning": rules_result["high_confidence_warning"],
+            "algorithm_comparison": rules_result.get("algorithm_comparison"),
         }
 
     pca_out = None
@@ -272,10 +273,49 @@ def run_pipeline_from_mock(seed: int | None = 42) -> dict:
     return run_pipeline(get_mock_data(seed=seed))
 
 
+def run_pipeline_from_sqlite(db_path: str | None = None) -> dict:
+    """Load products from local SQLite (table Product) and run the full pipeline."""
+    from data_mining.load_from_db import load_from_sqlite
+
+    return run_pipeline(load_from_sqlite(db_path))
+
+
+def run_pipeline_from_django(
+    user_id: int | None = None,
+    search_query: str | None = None,
+    limit: int | None = None,
+) -> dict:
+    """Load products from MySQL via Django ORM (même BDD que le backend P1)."""
+    from data_mining.load_from_db import load_from_django
+
+    return run_pipeline(load_from_django(user_id=user_id, search_query=search_query, limit=limit))
+
+
+def run_pipeline_from_mysql() -> dict:
+    """Load products from MySQL via PyMySQL (paramètres Django settings)."""
+    from data_mining.load_from_db import load_from_mysql
+
+    return run_pipeline(load_from_mysql())
+
+
+def export_pipeline_result(result: dict, path: str) -> None:
+    """Serialize pipeline result to JSON (for rapport / P4)."""
+    import json
+    from pathlib import Path
+
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False, default=str)
+
+
 if __name__ == "__main__":
     import json
+    from pathlib import Path
 
     pipeline_result = run_pipeline_from_mock()
+    out_dir = Path(__file__).resolve().parent / "output"
+    export_pipeline_result(pipeline_result, str(out_dir / "pipeline_mock.json"))
 
     print("\n=== PIPELINE SUMMARY ===")
     print(f"Status          : {pipeline_result['status']}")
@@ -310,6 +350,13 @@ if __name__ == "__main__":
 
     if pipeline_result["association_rules"]:
         print(f"Rules found     : {pipeline_result['association_rules']['total_rules']}")
+        comp = pipeline_result["association_rules"].get("algorithm_comparison")
+        if comp:
+            print(
+                f"FP-Growth vs Apriori : {comp.get('fpgrowth_rules_gamme')} / "
+                f"{comp.get('apriori_rules_gamme')} règles gamme (itemsets "
+                f"{comp.get('fpgrowth_itemsets')} / {comp.get('apriori_itemsets')})"
+            )
         print("\nTop 3 rules (overfitting_warning) :")
         for rule in pipeline_result["association_rules"]["top_rules"][:3]:
             print(f"  overfitting={rule['overfitting_warning']}: {rule['interpretation'][:80]}...")

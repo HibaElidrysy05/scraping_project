@@ -142,6 +142,43 @@ def _conversion_label(devise: str) -> str:
     return "MAD"
 
 
+_VALID_DEVISES = frozenset({"MAD", "USD", "EUR"})
+
+
+def _normalize_etat_p1(val) -> str:
+    if val is None or (isinstance(val, float) and np.isnan(val)) or pd.isna(val):
+        return "inconnu"
+    s = str(val).strip().lower()
+    if not s:
+        return "inconnu"
+    if s == "neuf":
+        return "neuf"
+    if "recondition" in s:
+        return "reconditionné"
+    if s == "occasion":
+        return "occasion"
+    return "inconnu"
+
+
+def _normalize_devise_p1(val) -> str:
+    if val is None or (isinstance(val, float) and np.isnan(val)) or pd.isna(val):
+        print("[preprocessing] WARNING: devise P1 vide — défaut MAD")
+        return "MAD"
+    s = str(val).strip().upper()
+    if s in _VALID_DEVISES:
+        return s
+    print(f"[preprocessing] WARNING: devise P1 invalide {val!r} — défaut MAD")
+    return "MAD"
+
+
+def _prix_valeur_source_column(columns) -> str | None:
+    if "prix_valeur" in columns:
+        return "prix_valeur"
+    if "price_value" in columns:
+        return "price_value"
+    return None
+
+
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Run the full preprocessing pipeline on scraped product data.
@@ -160,17 +197,37 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     rows_before = len(df)
     out = df.copy()
 
+    has_etat_col = "etat" in df.columns
+    has_devise_col = "devise" in df.columns
+    prix_src_col = _prix_valeur_source_column(df.columns)
+    has_prix_valeur_col = prix_src_col is not None
+
+    print(
+        f"[preprocessing] Colonnes P1 détectées: "
+        f"etat={has_etat_col}, devise={has_devise_col}, prix_valeur={has_prix_valeur_col}"
+    )
+    print(
+        "[preprocessing] Valeurs manquantes : suppression des lignes invalides "
+        "(pas d'imputation — titre/prix requis)"
+    )
+
     # 1. Remove invalid rows
     out = out[out["price"].notna()]
     out = out[~out["price"].apply(_is_invalid_price)]
     out = out[out["title"].notna()]
 
-    # 2. Parse price → prix_valeur
-    out["prix_valeur"] = out["price"].astype(str).apply(_parse_prix_valeur)
+    # 2. prix_valeur — colonne P1 ou parsing chaîne prix
+    if has_prix_valeur_col:
+        out["prix_valeur"] = pd.to_numeric(out[prix_src_col], errors="coerce")
+    else:
+        out["prix_valeur"] = out["price"].astype(str).apply(_parse_prix_valeur)
     out = out[out["prix_valeur"].notna()]
 
-    # 3. Extract devise (from raw price string)
-    out["devise"] = out["price"].astype(str).apply(_extract_devise)
+    # 3. devise — colonne P1 ou extraction depuis prix textuel
+    if has_devise_col:
+        out["devise"] = out["devise"].apply(_normalize_devise_p1)
+    else:
+        out["devise"] = out["price"].astype(str).apply(_extract_devise)
 
     # 4. Convert to MAD → prix_mad + conversion trace
     out["converted_from"] = out["devise"].apply(_conversion_label)
@@ -184,8 +241,11 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     eur_n = int(devise_counts.get("EUR", 0))
     print(f"Devises détectées : MAD={mad_n}, USD={usd_n}, EUR={eur_n}")
 
-    # 5. Extract etat from title
-    out["etat"] = out["title"].astype(str).apply(_extract_etat)
+    # 5. etat — colonne P1 ou extraction depuis titre
+    if has_etat_col:
+        out["etat"] = out["etat"].apply(_normalize_etat_p1)
+    else:
+        out["etat"] = out["title"].astype(str).apply(_extract_etat)
 
     # 6. Extract marque from title
     out["marque"] = out["title"].astype(str).apply(_extract_marque)
@@ -202,6 +262,12 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     rows_after = len(out)
     removed = rows_before - rows_after
     print(f"Rows before : {rows_before} | Rows after : {rows_after} | Removed : {removed}")
+    print("Sources des features:")
+    print(f"  etat       : {'colonne P1' if has_etat_col else 'extraction titre'}")
+    print(f"  devise     : {'colonne P1' if has_devise_col else 'extraction prix'}")
+    print(
+        f"  prix_valeur: {'colonne P1' if has_prix_valeur_col else 'parsing prix string'}"
+    )
 
     return out
 
