@@ -4,6 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+from datetime import datetime
+import uuid
+import re
 import time
 
 
@@ -28,21 +31,21 @@ def get_driver():
 
 def aliexpress(query):
     url = f"https://www.aliexpress.com/wholesale?SearchText={query.strip().replace(' ', '+')}"
+    id_recherche = str(uuid.uuid4())[:8]
+    date_collecte = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     products_data = []
     driver = get_driver()
 
     try:
         driver.get(url)
-
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
         time.sleep(4)
 
         soup = BeautifulSoup(driver.page_source, "html.parser")
-
-        # AliExpress product links all contain /item/ in href
         product_links = soup.find_all("a", href=lambda h: h and "/item/" in h)
+        print(f"AliExpress /item/ links: {len(product_links)}")
 
         seen = set()
         for a_tag in product_links:
@@ -53,32 +56,36 @@ def aliexpress(query):
             if not link.startswith("http"):
                 link = "https:" + link
 
-            # Deduplicate by link
             base_link = link.split("?")[0]
             if base_link in seen:
                 continue
             seen.add(base_link)
 
-            # Title — h3 or h1 inside the card
             title_el = a_tag.find(["h3", "h1", "h2"])
-            title = title_el.get_text(strip=True) if title_el else None
-            if not title:
+            titre_complet = title_el.get_text(strip=True) if title_el else None
+            if not titre_complet:
+                texts = [t.strip() for t in a_tag.stripped_strings if len(t.strip()) > 8]
+                titre_complet = texts[0] if texts else None
+            if not titre_complet:
                 continue
 
-                         # Price extraction — separate sale, original, discount
-            import re
-            price = None
-            for el in a_tag.find_all(True):
-                text = el.get_text(strip=True)
-                if text and len(text) < 60 and any(c.isdigit() for c in text):
-                    if "MAD" in text or "$" in text or "€" in text:
-                        prices = re.findall(r'(?:MAD|€|\$)\s*[\d,]+\.?\d*', text)
-                        discount = re.findall(r'-?\d+%', text)
-                        if prices:
-                            price = prices[0]
-                            break
+            prix = None
+            devise = None
+            full_text = a_tag.get_text(" ", strip=True)
+            price_matches = re.findall(
+                r'(?:MAD|€|\$)\s*[\d,]+\.?\d*|[\d,]+\.?\d*\s*(?:MAD|€|\$)',
+                full_text
+            )
+            if price_matches:
+                raw = price_matches[0]
+                nums = re.findall(r'[\d,]+\.?\d*', raw)
+                if nums:
+                    try:
+                        prix = float(nums[0].replace(",", ""))
+                    except ValueError:
+                        pass
+                devise = "USD" if "$" in raw else "EUR" if "€" in raw else "MAD"
 
-            # Image
             img_el = a_tag.find("img")
             img_link = None
             if img_el:
@@ -87,10 +94,19 @@ def aliexpress(query):
                     img_link = "https:" + img_link
 
             products_data.append({
-                "title": title,
-                "price": price,
+                "titre_complet": titre_complet,
+                "prix": prix,
+                "devise": devise or "USD",
+                "plateforme": "AliExpress",
+                "note_vendeur": None,
+                "nombre_avis": None,
+                "etat": "Neuf",
+                "type_vendeur": None,
                 "img_link": img_link,
                 "link": link,
+                "search_query": query,
+                "date_collecte": date_collecte,
+                "id_recherche": id_recherche,
             })
 
         print(f"AliExpress products found: {len(products_data)}")

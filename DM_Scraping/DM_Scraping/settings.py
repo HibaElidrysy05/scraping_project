@@ -75,15 +75,11 @@ WSGI_APPLICATION = 'DM_Scraping.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Scraper',
-        'USER': 'root',
-        'PASSWORD': 'Halima_2005',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-    
 }
+
 
 
 # Password validation
