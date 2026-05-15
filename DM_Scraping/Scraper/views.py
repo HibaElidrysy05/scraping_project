@@ -7,12 +7,11 @@ from rest_framework.response import Response
 from .scraping.jumia import jumia
 from .scraping.amazon import amazon
 from .scraping.avito import avito
+from .scraping.aliexpress import aliexpress
+from .scraping.banggood import banggood
 
 from .models import Product
-from .scraping.nettoyage import (
-    pretraiter_produit,
-    score_pertinence
-)
+from .scraping.nettoyage import pretraiter_produit, score_pertinence
 
 
 @login_required(login_url="login")
@@ -27,8 +26,16 @@ def index(request):
             amazon_products = amazon(query) or []
             jumia_products = jumia(query) or []
             avito_products = avito(query) or []
+            aliexpress_products = aliexpress(query) or []
+            banggood_products = banggood(query) or []
 
-            products = amazon_products + jumia_products + avito_products
+            products = (
+                amazon_products
+                + jumia_products
+                + avito_products
+                + aliexpress_products
+                + banggood_products
+            )
 
             for product in products:
                 Product.objects.create(
@@ -74,6 +81,21 @@ def search_api(request):
 
     if "all" in selected or "avito" in selected:
         products += avito(query) or []
+
+    if "all" in selected or "aliexpress" in selected:
+        products += aliexpress(query) or []
+
+    if "all" in selected or "banggood" in selected:
+        products += banggood(query) or []
+
+    products = sorted(
+        products,
+        key=lambda product: score_pertinence(
+            product.get("title") or product.get("titre_complet"),
+            query
+        ),
+        reverse=True
+    )
 
     cleaned_products = []
 

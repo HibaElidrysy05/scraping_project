@@ -84,7 +84,7 @@ DATABASES = {
 
         'USER': 'root',
 
-        'PASSWORD': 'Fati@2004*',
+        'PASSWORD': '',
 
         'HOST': 'localhost',
 
